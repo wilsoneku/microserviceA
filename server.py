@@ -24,7 +24,7 @@ def validate_json(data):
 def fetch_data(stock, call_type):
     # load API key from .env file
     load_dotenv()
-    key = os.getenv('ALPHA_VANTAGE_KEY')
+    key = os.getenv('ALPHA_VANTAGE_KEY2')
 
     # dictionary to replace input with actual API call parameters
     functions = {
@@ -74,8 +74,9 @@ def main(address="tcp://*:8001"):
         # CHECK IF DATA IS JSON-esque string, or just a string
         else:
             print(f"Validated data: {result}")
-            data = fetch_data(result['stock'], result['call_type'])
-            socket.send_json(data)
+            reply_data = fetch_data(result['stock'], result['call_type'])
+            # validated_reply = validate_reply(reply_data)
+            socket.send_json(reply_data)
 
 
 if __name__ == "__main__":
