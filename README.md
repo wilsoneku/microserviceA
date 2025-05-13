@@ -34,6 +34,7 @@ When sending a JSON object, there MUST be TWO included properties, "**stock**" a
     socket.send_json(data)
 
 
+
 ## RECEIVING DATA 
 
 Both types of calls (string and JSON) will return a JSON object. 
@@ -42,6 +43,9 @@ Both types of calls (string and JSON) will return a JSON object.
     reply_data = json.loads(reply.decode('utf-8'))
 
 **_Note_**: the reply is technically a JSON **STRING** and must be loaded into a JSON **OBJECT**
+
+![uml sequence diagram](uml-sequence-diagram.png)
+
 
 ## SAMPLE REQUESTS
 1. Run server.py
