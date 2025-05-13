@@ -9,7 +9,7 @@ pyzmq
 
 1. install required python modules
 
-2. GET ALPHA VANTAGE API KEY
+2. GET ALPHA VANTAGE API KEY (https://www.alphavantage.co/support/#api-key)
 3. Create .env file and add the following text (note: replace the appropriate text with your actual API key)
 > ALPHA_VANTAGE_KEY=replace-with-key
 
