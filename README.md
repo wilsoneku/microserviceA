@@ -17,11 +17,13 @@ pyzmq
 
 server.py is able to accept TWO types of inputs: strings & JSON objects.
 
+### String input
 When sending a string, send the stock ticker symbol via the zeroMQ send_string function:
 
     stock = 'IBM'
     socket.send_string(stock)
 
+### JSON input
 When sending a JSON object, there MUST be TWO included properties, "**stock**" and "**call_type**":
 
  **stock** = stock ticker symbol
