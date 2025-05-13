@@ -4,8 +4,6 @@ CS361 - Microservice project
 
 ### Required external python modules 
 pyzmq
-finnhub-python
-
 
 SETUP INSTRUCTIONS --- WORK IN PROGRESS ---
 
