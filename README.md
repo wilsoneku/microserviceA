@@ -5,7 +5,7 @@ CS361 - Microservice project
 ### Required external python modules 
 pyzmq
 
-SETUP INSTRUCTIONS --- WORK IN PROGRESS ---
+### SETUP INSTRUCTIONS --- WORK IN PROGRESS ---
 
 1. install required python modules
 
