@@ -39,6 +39,8 @@ Both types of calls (string and JSON) will return a JSON object.
     reply = socket.recv()
     reply_data = json.loads(reply.decode('utf-8'))
 
+**_Note_**: the reply is technically a JSON **STRING** and must be loaded into a JSON **OBJECT**
+
 ## SAMPLE REQUESTS
 1. Run server.py
 
