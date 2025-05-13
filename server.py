@@ -90,9 +90,10 @@ def main(address="tcp://*:8001"):
         print(f"raw data: {received}")
 
         is_valid, result = validate_json(received)
+
         if not is_valid:
             print(f"Error: {result['error']}")
-            return result  # Returns the error message
+            socket.send_json(result)
 
         # CHECK IF DATA IS JSON-esque string, or just a string
         else:
