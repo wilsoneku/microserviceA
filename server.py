@@ -5,12 +5,17 @@ import os
 import finnhub
 from dotenv import load_dotenv
 
-def is_json(data_str):
+def validate_json(data):
+    if not isinstance(data, str):
+        return False, {"error": "Input must be a string"}
     try:
-        json.loads(data_str)
-        return True
+        json_data = json.loads(data)
+        if not isinstance(json_data, dict):
+            return False, {"error": "JSON must be an object"}
+        return True, json_data
     except (json.JSONDecodeError, TypeError):
-        return False
+        return False, {"error": "Invalid JSON format"}
+
 
 # FETCH LIVE DATA VIA FINNHUB API
 def fetch_live(stock):
@@ -80,10 +85,10 @@ def main(address="tcp://*:8001"):
         received = data.decode('utf-8')
         print(f"raw data: {received}")
 
-        # validated = is_json(received)
+        is_valid, result = validate_json(received)
 
         # CHECK IF DATA IS JSON-esque string, or just a string
-        if is_json(received):
+        if is_valid:
             # Handle JSON object
             json_data = json.loads(received)
             print(f"Received JSON: {json_data}")
@@ -92,12 +97,16 @@ def main(address="tcp://*:8001"):
             socket.send_json(data)
 
         else:
-            # Handle plain string
-            print(f"Received string: {received}")
-            json_data = {'stock': received, 'call_type': 'live'}
-            data = fetch_data(json_data['stock'], json_data['call_type'])
-            # response = {"status": "success", "received": received}
-            socket.send_json(data)
+            if isinstance(received, str) and received.strip():
+                # Handle plain string (stock symbol)
+                print(f"Received string: {received}")
+                json_data = {'stock': received, 'call_type': 'live'}
+                data = fetch_data(json_data['stock'], json_data['call_type'])
+                socket.send_json(data)
+            else:
+                # Handle invalid input
+                socket.send_json({"error": "Invalid input. Must be a stock symbol string or valid JSON object"})
+
 
 if __name__ == "__main__":
     main()
