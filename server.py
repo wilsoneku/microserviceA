@@ -13,38 +13,12 @@ def validate_json(data):
         json_data = json.loads(data)
         # print(f"JSON data: {json_data}")
         if not isinstance(json_data, dict):
-            return True, {"stock": str(json_data), "call_type": "live"}
+            return True, {"stock": json_data, "call_type": "live"}
         return True, json_data
     except (json.JSONDecodeError, TypeError):
         if data.strip():
             return True, {"stock": data.strip(), "call_type": "live"}
         return False, {"error": "Empty input"}
-
-
-# FETCH LIVE DATA VIA FINNHUB API
-def fetch_live(stock):
-    keys = {
-        "c": "current",
-        "d": "change",
-        "dp": "percent change",
-        "h": "daily high",
-        "l": "daily low",
-        "o": "open price",
-        "pc": "previous close",
-        "t": "t"
-    }
-    load_dotenv()
-    key = os.getenv('FINNHUB_KEY')
-
-    # use finnhub client to get live stock data
-    finnhub_client = finnhub.Client(api_key={key})
-    live_data = finnhub_client.quote(stock)
-
-    # replace default keys w/ human-readable keys
-    for old_key, new_key in keys.items():
-        live_data[new_key] = live_data.pop(old_key)
-
-    return live_data
 
 # FETCH DATA VIA ALPHA_VANTAGE API
 def fetch_data(stock, call_type):
@@ -65,6 +39,7 @@ def fetch_data(stock, call_type):
         all_data = {}
         for func_name, function in functions.items():
             url = f'https://www.alphavantage.co/query?function={function}&symbol={stock}&apikey={key}]'
+            print(f"API call function: {function}, symbol: {stock}")
             response = requests.get(url)
             all_data[func_name] = response.json()
         return all_data
@@ -73,6 +48,7 @@ def fetch_data(stock, call_type):
             return {"error": f"Invalid call type. Must be one of: {', '.join(functions.keys())}"}
         function = functions[call_type]
         url = f'https://www.alphavantage.co/query?function={function}&symbol={stock}&apikey={key}]'
+        print(f"API call function: {function}, symbol: {stock}")
         response = requests.get(url)
         return response.json()
 
@@ -87,7 +63,7 @@ def main(address="tcp://*:8001"):
     while True:
         data = socket.recv()
         received = data.decode('utf-8')
-        print(f"raw data: {received}")
+        print(f"Raw data: {received}")
 
         is_valid, result = validate_json(received)
 
@@ -100,24 +76,6 @@ def main(address="tcp://*:8001"):
             print(f"Validated data: {result}")
             data = fetch_data(result['stock'], result['call_type'])
             socket.send_json(data)
-        # if is_valid:
-        #     # Handle JSON object
-        #     json_data = json.loads(received)
-        #     print(f"Received JSON: {json_data}")
-        #     data = fetch_data(json_data['stock'], json_data['call_type'])
-        #     # response = {"status": "success", "received": stock}
-        #     socket.send_json(data)
-        #
-        # else:
-        #     if isinstance(received, str) and received.strip():
-        #         # Handle plain string (stock symbol)
-        #         print(f"Received string: {received}")
-        #         json_data = {'stock': received, 'call_type': 'live'}
-        #         data = fetch_data(json_data['stock'], json_data['call_type'])
-        #         socket.send_json(data)
-        #     else:
-        #         # Handle invalid input
-        #         socket.send_json({"error": "Invalid input. Must be a stock symbol string or valid JSON object"})
 
 
 if __name__ == "__main__":
