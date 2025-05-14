@@ -3,15 +3,7 @@ CS361 - Microservice project
 
 
 ### Required external python modules 
-pyzmq
-
-## SETUP INSTRUCTIONS
-
-1. install required python modules
-
-2. GET ALPHA VANTAGE API KEY (https://www.alphavantage.co/support/#api-key)
-3. Create .env file and add the following text (note: replace the appropriate text with your actual API key)
-> ALPHA_VANTAGE_KEY=replace-with-key
+pyzmq, yfinance, pandas
 
 ## REQUESTING DATA
 
@@ -33,8 +25,6 @@ When sending a JSON object, there MUST be TWO included properties, "**stock**" a
     data = {'stock': 'IBM', 'call_type': 'monthly'}
     socket.send_json(data)
 
-
-
 ## RECEIVING DATA 
 
 Both types of calls (string and JSON) will return a JSON object. 
@@ -43,6 +33,15 @@ Both types of calls (string and JSON) will return a JSON object.
     reply_data = json.loads(reply.decode('utf-8'))
 
 **_Note_**: the reply is technically a JSON **STRING** and must be loaded into a JSON **OBJECT**
+
+Return data will be a JSON object with the format
+
+    { 
+        metadata: JSON object of metadata about the requested stock
+        data: JSON object of requested data - will return [] if an error is present
+        error: String, error message
+    }
+      
 
 ![uml sequence diagram](uml-sequence-diagram.png)
 

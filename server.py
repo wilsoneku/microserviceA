@@ -1,56 +1,104 @@
 import zmq
 import json
-import requests
-import os
-import finnhub
-from dotenv import load_dotenv
+import yfinance as yf
+import pandas as pd
 
+# validate incoming object, and return a JSON object read to send to the API
 def validate_json(data):
-    # validate incoming object, and return a JSON object read to send to the API
+   # check if incoming object is a string
     if not isinstance(data, str):
         return False, {"error": "Input must be a string"}
     try:
+    # check if data can load into a JSON object
         json_data = json.loads(data)
-        # print(f"JSON data: {json_data}")
+        # handles submissions with all integers
         if not isinstance(json_data, dict):
             return True, {"stock": json_data, "call_type": "live"}
         return True, json_data
     except (json.JSONDecodeError, TypeError):
+    # handle Strings
         if data.strip():
             return True, {"stock": data.strip(), "call_type": "live"}
         return False, {"error": "Empty input"}
 
-# FETCH DATA VIA ALPHA_VANTAGE API
-def fetch_data(stock, call_type):
-    # load API key from .env file
-    load_dotenv()
-    key = os.getenv('ALPHA_VANTAGE_KEY2')
+# FETCH DATA VIA yFinance API
+def fetch_yfinance(stock, call_type):
+    try:
+        dat = yf.Ticker(stock)
 
-    # dictionary to replace input with actual API call parameters
-    functions = {
-        'daily': 'TIME_SERIES_DAILY',
-        'weekly': 'TIME_SERIES_WEEKLY',
-        'monthly': 'TIME_SERIES_MONTHLY',
-        'live': 'GLOBAL_QUOTE'
-    }
+        # Set up metadata info to return
+        info = dat.fast_info
+        metadata = {
+            "symbol": stock,
+            "currency": info.currency,
+            "exchange": info.exchange,
+            "quote_type": info.quote_type,
+            "market_cap": round(info.market_cap, 2)
+        }
 
-    # Make API call
-    if call_type == "all":
-        all_data = {}
-        for func_name, function in functions.items():
-            url = f'https://www.alphavantage.co/query?function={function}&symbol={stock}&apikey={key}]'
-            print(f"API call function: {function}, symbol: {stock}")
-            response = requests.get(url)
-            all_data[func_name] = response.json()
-        return all_data
-    else:
-        if call_type.lower() not in functions:
-            return {"error": f"Invalid call type. Must be one of: {', '.join(functions.keys())}"}
-        function = functions[call_type]
-        url = f'https://www.alphavantage.co/query?function={function}&symbol={stock}&apikey={key}]'
-        print(f"API call function: {function}, symbol: {stock}")
-        response = requests.get(url)
-        return response.json()
+        if call_type == "live":
+            try:
+                live_data = {
+                    "Date": pd.Timestamp.now().strftime('%Y-%m-%d'),
+                    "Last Found Price": round(info.last_price, 2),
+                    "High": round(info.day_high, 2),
+                    "Low": round(info.day_low, 2),
+                    "Open": round(info.open, 2),
+                    "Previous Close": round(info.previous_close, 2),
+                    "Volume": int(info.last_volume)
+                }
+                return {"metadata": metadata, "data": [live_data]}
+            except (AttributeError, ValueError, Exception) as error:
+                return {
+                    "metadata": metadata,
+                    "data": [],
+                    "error": f"Could not fetch live data: {str(error)}"
+                }
+
+        try:
+            if call_type == "daily":
+                res = dat.history(period='1mo', interval='1d', rounding=True)
+            elif call_type == "weekly":
+                res = dat.history(period='1y', interval='1wk', rounding=True)
+            elif call_type == "monthly":
+                res = dat.history(period='5y', interval='1mo', rounding=True)
+            else:
+                return {
+                    "metadata": metadata,
+                    "error": f"Invalid call_type: {call_type}",
+                    "data": []
+                }
+
+            if res.empty:
+                return {
+                    "metadata": metadata,
+                    "error": "No data available for this symbol",
+                    "data": []
+                }
+
+            df = pd.DataFrame(res)
+            df.reset_index(inplace=True)
+            df = df.rename(columns={'index': 'Date'})
+            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+            data = json.loads(df.to_json(orient='records', date_format='iso'))
+
+            return {"metadata": metadata, "data": data}
+
+        except Exception as error:
+        # If stock is found, but no historical data is available
+            return {
+                "metadata": metadata,
+                "data": [],
+                "error": f"Error fetching historical data: {str(error)}",
+            }
+
+    except Exception as error:
+        # When the stock cannot be found by the yFinance API
+        return {
+            "metadata": {"symbol": stock},
+            "data": [],
+            "error": f"Failed to find stock: {str(error)}",
+        }
 
 
 def main(address="tcp://*:8001"):
@@ -61,12 +109,13 @@ def main(address="tcp://*:8001"):
     print(f"Server started on {address}")
 
     while True:
+        # Set up socket
         data = socket.recv()
         received = data.decode('utf-8')
         print(f"Raw data: {received}")
 
+        # Validate incoming JSON object
         is_valid, result = validate_json(received)
-
         if not is_valid:
             print(f"Error: {result['error']}")
             socket.send_json(result)
@@ -74,7 +123,7 @@ def main(address="tcp://*:8001"):
         # CHECK IF DATA IS JSON-esque string, or just a string
         else:
             print(f"Validated data: {result}")
-            reply_data = fetch_data(result['stock'], result['call_type'])
+            reply_data = fetch_yfinance(result['stock'], result['call_type'])
             # validated_reply = validate_reply(reply_data)
             socket.send_json(reply_data)
 
