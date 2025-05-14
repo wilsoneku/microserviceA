@@ -37,60 +37,45 @@ def fetch_yfinance(stock, call_type):
         }
 
         if call_type == "live":
-            try:
-                live_data = {
-                    "Date": pd.Timestamp.now().strftime('%Y-%m-%d'),
-                    "Last Found Price": round(info.last_price, 2),
-                    "High": round(info.day_high, 2),
-                    "Low": round(info.day_low, 2),
-                    "Open": round(info.open, 2),
-                    "Previous Close": round(info.previous_close, 2),
-                    "Volume": int(info.last_volume)
-                }
-                return {"metadata": metadata, "data": [live_data]}
-            except (AttributeError, ValueError, Exception) as error:
-                return {
-                    "metadata": metadata,
-                    "data": [],
-                    "error": f"Could not fetch live data: {str(error)}"
-                }
+            live_data = {
+                "Date": pd.Timestamp.now().strftime('%Y-%m-%d'),
+                "Last Found Price": round(info.last_price, 2),
+                "High": round(info.day_high, 2),
+                "Low": round(info.day_low, 2),
+                "Open": round(info.open, 2),
+                "Previous Close": round(info.previous_close, 2),
+                "Volume": int(info.last_volume)
+            }
+            return {"metadata": metadata, "data": [live_data]}
 
-        try:
-            if call_type == "daily":
-                res = dat.history(period='1mo', interval='1d', rounding=True)
-            elif call_type == "weekly":
-                res = dat.history(period='1y', interval='1wk', rounding=True)
-            elif call_type == "monthly":
-                res = dat.history(period='5y', interval='1mo', rounding=True)
-            else:
-                return {
-                    "metadata": metadata,
-                    "error": f"Invalid call_type: {call_type}",
-                    "data": []
-                }
-
-            if res.empty:
-                return {
-                    "metadata": metadata,
-                    "error": "No data available for this symbol",
-                    "data": []
-                }
-
-            df = pd.DataFrame(res)
-            df.reset_index(inplace=True)
-            df = df.rename(columns={'index': 'Date'})
-            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
-            data = json.loads(df.to_json(orient='records', date_format='iso'))
-
-            return {"metadata": metadata, "data": data}
-
-        except Exception as error:
-        # If stock is found, but no historical data is available
+        if call_type == "daily":
+            res = dat.history(period='1mo', interval='1d', rounding=True)
+        elif call_type == "weekly":
+            res = dat.history(period='1y', interval='1wk', rounding=True)
+        elif call_type == "monthly":
+            res = dat.history(period='5y', interval='1mo', rounding=True)
+        else:
             return {
                 "metadata": metadata,
-                "data": [],
-                "error": f"Error fetching historical data: {str(error)}",
+                "error": f"Invalid call_type: {call_type}",
+                "data": []
             }
+
+        if res.empty:
+            return {
+                "metadata": metadata,
+                "error": "No data available for this symbol",
+                "data": []
+            }
+
+        # Convert returned data from Dataframe to JSON object
+        df = pd.DataFrame(res)
+        df.reset_index(inplace=True)
+        df = df.rename(columns={'index': 'Date'})
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')   # format date
+        data = json.loads(df.to_json(orient='records', date_format='iso'))
+
+        return {"metadata": metadata, "data": data}
 
     except Exception as error:
         # When the stock cannot be found by the yFinance API
