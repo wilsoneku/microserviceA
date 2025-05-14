@@ -28,7 +28,7 @@ def send_message(stock, selected_type):
     return reply_data
 
 def main():
-    stock = input("Enter stock symbol (e.g., IBM, AAPL): ").upper()
+    stock = input("Enter stock symbol (e.g., IBM, AAPL): ")
 
     print("\nSelect data type:")
     print("1. Live")

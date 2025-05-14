@@ -2,12 +2,12 @@ import json
 import zmq
 
 def send_message(stock):
-    server_address = "tcp://localhost:8001"
+
 
     # Connect to socket
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
-    socket.connect(server_address)
+    socket.connect("tcp://localhost:8001")
 
     # pass stock ticker (string) to microservice
     socket.send_string(stock)
@@ -25,10 +25,8 @@ def send_message(stock):
     return reply_data
 
 def main():
-    server_address = "tcp://localhost:8001"
-
     # Get input and set all received text to upper case
-    stock = input("Enter stock symbol (e.g., IBM, AAPL): ").upper()
+    stock = input("Enter stock symbol (e.g., IBM, AAPL): ")
 
     api_reply = send_message(stock)
 
