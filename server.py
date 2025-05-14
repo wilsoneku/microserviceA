@@ -33,13 +33,14 @@ def fetch_yfinance(stock, call_type):
             "currency": info.currency,
             "exchange": info.exchange,
             "quote_type": info.quote_type,
-            "market_cap": round(info.market_cap, 2)
+            "market_cap": round(info.market_cap, 2),
+            "call_type": call_type,
         }
 
         if call_type == "live":
             # use the "info" object to get necessary information
             live_data = {
-                "Date": pd.Timestamp.now().strftime('%Y-%m-%d'),
+                "Date": pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
                 "Last Found Price": round(info.last_price, 2),
                 "High": round(info.day_high, 2),
                 "Low": round(info.day_low, 2),
