@@ -37,6 +37,7 @@ def fetch_yfinance(stock, call_type):
         }
 
         if call_type == "live":
+            # use the "info" object to get necessary information
             live_data = {
                 "Date": pd.Timestamp.now().strftime('%Y-%m-%d'),
                 "Last Found Price": round(info.last_price, 2),
@@ -48,7 +49,7 @@ def fetch_yfinance(stock, call_type):
             }
             return {"metadata": metadata, "data": [live_data]}
 
-        if call_type == "daily":
+        elif call_type == "daily":
             res = dat.history(period='1mo', interval='1d', rounding=True)
         elif call_type == "weekly":
             res = dat.history(period='1y', interval='1wk', rounding=True)
@@ -84,7 +85,6 @@ def fetch_yfinance(stock, call_type):
             "data": [],
             "error": f"Failed to find stock: {str(error)}",
         }
-
 
 def main(address="tcp://*:8001"):
     # SETUP SOCKET
