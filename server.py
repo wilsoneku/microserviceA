@@ -40,7 +40,8 @@ def fetch_yfinance(stock, call_type):
         if call_type == "live":
             # use the "info" object to get necessary information
             live_data = {
-                "Date": pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+                "Date": pd.Timestamp.now().strftime('%Y-%m-%d'),
+                "Time": pd.Timestamp.now().strftime('%H:%M:%S'),
                 "Last Found Price": round(info.last_price, 2),
                 "High": round(info.day_high, 2),
                 "Low": round(info.day_low, 2),
