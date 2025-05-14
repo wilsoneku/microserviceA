@@ -20,7 +20,7 @@ When sending a JSON object, there MUST be TWO included properties, "**stock**" a
 
  **stock** = stock ticker symbol
 
- **call_type** = [daily, weekly, monthly, live, all] (choose one)
+ **call_type** = [daily, weekly, monthly, live] (choose one)
 
     data = {'stock': 'IBM', 'call_type': 'monthly'}
     socket.send_json(data)
