@@ -35,16 +35,16 @@ def main():
     print("2. Daily")
     print("3. Weekly")
     print("4. Monthly")
-    print("5. All Data")
+    # print("5. All Data")
 
-    choice = input("\nEnter your choice (1-5): ")
+    choice = input("\nEnter your choice (1-4): ")
 
     type_map = {
         "1": "live",
         "2": "daily",
         "3": "weekly",
         "4": "monthly",
-        "5": "all"
+        # "5": "all"
     }
 
     selected_type = type_map.get(choice)
