@@ -96,22 +96,21 @@ def main(address="tcp://*:8001"):
     print(f"Server started on {address}")
 
     while True:
-        # Set up socket
+        # Wait for incoming data
         data = socket.recv()
         received = data.decode('utf-8')
         print(f"Raw data: {received}")
 
-        # Validate incoming JSON object
+        # Validate and format received data
         is_valid, result = validate_json(received)
+
         if not is_valid:
             print(f"Error: {result['error']}")
             socket.send_json(result)
-
-        # CHECK IF DATA IS JSON-esque string, or just a string
         else:
+            # fetch data from API
             print(f"Validated data: {result}")
             reply_data = fetch_yfinance(result['stock'], result['call_type'])
-            # validated_reply = validate_reply(reply_data)
             socket.send_json(reply_data)
 
 
